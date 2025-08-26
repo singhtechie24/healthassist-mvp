@@ -21,14 +21,12 @@ export default function RealtimeVoiceChat({
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [session, setSession] = useState<RealtimeSession | null>(null);
-  const [usageStats, setUsageStats] = useState(openaiRealtime.getUsageStats());
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [lastError, setLastError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Update usage stats
-  const updateUsage = useCallback(() => {
-    setUsageStats(openaiRealtime.getUsageStats());
+  // Update session state
+  const updateSession = useCallback(() => {
     setSession(openaiRealtime.getCurrentSession());
   }, []);
 
@@ -39,7 +37,7 @@ export default function RealtimeVoiceChat({
       setIsConnected(true);
       setConnectionStatus('connected');
       setLastError(null); // Clear any lingering errors when successfully connected
-      updateUsage();
+      updateSession();
     };
 
     const handleConnectionClose = () => {
@@ -48,14 +46,14 @@ export default function RealtimeVoiceChat({
       setIsRecording(false);
       setIsPlaying(false);
       setConnectionStatus('disconnected');
-      updateUsage();
+      updateSession();
     };
 
     const handleSessionCreated = () => {
       console.log('🎯 Voice session created');
       setLastError(null); // Clear any errors when session is successfully created
       setConnectionStatus('connected'); // Ensure connection status is correct
-      updateUsage();
+      updateSession();
       
       // Call onSessionStart callback if provided
       if (onSessionStart) {
@@ -95,10 +93,15 @@ export default function RealtimeVoiceChat({
         errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       }
       
-      setLastError(errorMessage);
-      setConnectionStatus('error');
-      if (onError) {
-        onError(errorMessage);
+      // Don't set error if we have an active session (session errors are handled differently)
+      if (!session) {
+        setLastError(errorMessage);
+        setConnectionStatus('error');
+        if (onError) {
+          onError(errorMessage);
+        }
+      } else {
+        console.log('⚠️ Session error (not setting UI error):', errorMessage);
       }
     };
 
@@ -133,7 +136,7 @@ export default function RealtimeVoiceChat({
       openaiRealtime.off('audio.output.finished', handleAudioOutputFinished);
       openaiRealtime.off('error', handleError);
     };
-  }, [onError, updateUsage]);
+  }, [onError, updateSession]);
 
   // Timer to update current time for live duration calculation
   useEffect(() => {
@@ -153,10 +156,15 @@ export default function RealtimeVoiceChat({
     
     if (isActuallyConnected) {
       await openaiRealtime.disconnect();
+      // Reset session state after disconnect
+      setSession(null);
+      setLastError(null);
+      setConnectionStatus('disconnected');
     } else {
       try {
         setConnectionStatus('connecting');
         setLastError(null);
+        setSession(null); // Clear any old session
         await openaiRealtime.connect();
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to connect';
@@ -261,7 +269,7 @@ export default function RealtimeVoiceChat({
       </div>
 
       {/* Error Display - only show if actually not connected or in error state */}
-      {lastError && (connectionStatus === 'error' || connectionStatus === 'disconnected') && !session && (
+      {lastError && (connectionStatus === 'error' || connectionStatus === 'disconnected') && !session && !isConnected && (
         <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="flex items-start space-x-3">
             <div className="text-2xl">⚠️</div>

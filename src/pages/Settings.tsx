@@ -33,7 +33,7 @@ export default function Settings() {
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
     FF_TIPS: true,        // Tips enabled by default
     FF_SCANNER: false,    // Scanner off by default (experimental)
-    FF_VOICE: false,      // Voice off by default (experimental)
+    FF_VOICE: true,       // Voice enabled by default
     FF_MAP: true          // Maps enabled if API key present
   });
   const [isLoading, setIsLoading] = useState(true);

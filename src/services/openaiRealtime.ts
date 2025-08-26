@@ -52,7 +52,7 @@ export class OpenAIRealtimeService {
   private isProcessingResponse: boolean = false; // Flag to prevent double-triggering
   
   private usage: RealtimeLimits = {
-    maxDailyConversations: 10, // Limit to 10 conversations per day
+    maxDailyConversations: 5, // Align with Firebase limits for cost control
     maxConversationDurationSeconds: 300, // Max 5 minutes per conversation
     dailyUsage: [],
     dailySessionsStarted: 0,
@@ -62,6 +62,9 @@ export class OpenAIRealtimeService {
   constructor() {
     this.loadUsageFromStorage();
     this.initializeEventListeners();
+    
+    // Clear any existing usage data for testing
+    this.clearUsageData();
   }
 
   // Load usage data from localStorage
@@ -97,6 +100,19 @@ export class OpenAIRealtimeService {
       localStorage.setItem('openai_realtime_usage', JSON.stringify(this.usage));
     } catch (error) {
       console.warn('Failed to save realtime usage data:', error);
+    }
+  }
+
+  // Clear usage data for testing
+  private clearUsageData(): void {
+    try {
+      localStorage.removeItem('openai_realtime_usage');
+      this.usage.dailySessionsStarted = 0;
+      this.usage.dailyUsage = [];
+      this.usage.lastResetDate = new Date().toDateString();
+      console.log('🧹 Cleared voice chat usage data for testing');
+    } catch (error) {
+      console.warn('Failed to clear usage data:', error);
     }
   }
 
