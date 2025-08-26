@@ -268,7 +268,7 @@ export class OpenAIRealtimeService {
       console.log('🔗 Connecting to OpenAI Realtime API via proxy...');
       
       // Connect to our local proxy server instead of OpenAI directly
-      const proxyUrl = 'ws://localhost:3001';
+      const proxyUrl = 'wss://healthassist-mvp-qvi7.vercel.app/api/realtime';
       this.ws = new WebSocket(proxyUrl);
 
       // Set up WebSocket handlers
