@@ -15,7 +15,9 @@ export default async function handler(req: Request): Promise<Response> {
   const upstreamUrl = 'https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17';
 
   // OpenAI API key must be set in the Vercel (proxy) project, server-only
-  const apiKey = (process.env.OPENAI_API_KEY as string) || '';
+  // On Edge, use globalThis to safely access env without Node types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const apiKey = (((globalThis as any).process?.env?.OPENAI_API_KEY) as string) || '';
   if (!apiKey) {
     return new Response('OPENAI_API_KEY not configured', { status: 500 });
   }
