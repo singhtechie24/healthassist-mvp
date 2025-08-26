@@ -1,0 +1,13 @@
+{
+    "task": "Mood Tracker (add, list, mini-chart)",
+    "steps": [
+      "Create form: score (1-5), note (optional), save to moodLogs/{uid}/logs/{id}",
+      "List last 10 entries; show date + score",
+      "Add tiny weekly bar chart (Recharts) on / page"
+    ],
+    "acceptance": [
+      "New mood saved and listed",
+      "Chart displays recent scores"
+    ]
+  }
+  

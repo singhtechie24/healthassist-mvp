@@ -1,0 +1,40 @@
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependencies
+node_modules/
+realtime-proxy/node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Development
+.vscode/
+.DS_Store
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Runtime
+.coverage
+.nyc_output
+
+# Temporary files
+.tmp/
+temp/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

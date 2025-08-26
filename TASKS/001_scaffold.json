@@ -1,0 +1,14 @@
+{
+    "task": "Scaffold React + Tailwind + Router + Layout",
+    "steps": [
+      "Add React Router with routes: /login, /, /chat, /mood, /reminders, /emergency, /settings, /tips",
+      "Create Layout shell: top navbar + content container (max-w-6xl)",
+      "Add placeholder pages with H1 headings and TODOs"
+    ],
+    "acceptance": [
+      "App boots and routes render",
+      "Layout header shows nav links",
+      "No TypeScript or ESLint errors"
+    ]
+  }
+  

@@ -1,0 +1,15 @@
+{
+    "task": "Firebase client config + Anonymous Login + Consent gate",
+    "steps": [
+      "Add src/lib/firebase.ts exporting app, auth, db",
+      "Implement Anonymous login on /login with consent checkbox gate",
+      "Create users/{uid} doc with {consentAccepted, createdAt}",
+      "Redirect to '/' after consent"
+    ],
+    "acceptance": [
+      "Anonymous login works",
+      "Consent is required before accessing features",
+      "users/{uid} document is created"
+    ]
+  }
+  

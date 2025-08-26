@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test USDA API</title>
+</head>
+<body>
+    <h1>USDA API Test</h1>
+    <button onclick="testUSDA()">Test USDA API</button>
+    <div id="results"></div>
+
+    <script>
+        async function testUSDA() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Testing USDA API...';
+            
+            try {
+                const searchUrl = 'https://api.nal.usda.gov/fdc/v1/foods/search';
+                const params = new URLSearchParams({
+                    query: 'spinach raw',
+                    pageSize: '1',
+                    dataType: 'Foundation,SR Legacy',
+                    sortBy: 'dataType.keyword',
+                    sortOrder: 'asc'
+                });
+
+                console.log('Testing URL:', `${searchUrl}?${params}`);
+                
+                const response = await fetch(`${searchUrl}?${params}`);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultsDiv.innerHTML = `<h3>Error:</h3><p>Status: ${response.status}</p><p>${errorText}</p>`;
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                resultsDiv.innerHTML = `
+                    <h3>Success!</h3>
+                    <p>Total hits: ${data.totalHits}</p>
+                    <p>Foods returned: ${data.foods?.length || 0}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = `<h3>Error:</h3><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
+

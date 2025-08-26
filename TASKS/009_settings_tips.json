@@ -1,0 +1,12 @@
+{
+    "task": "Settings + Tips/Feedback",
+    "steps": [
+      "Settings: toggle analytics (off by default), show consent status, Delete my data button",
+      "Tips: show Tip of the Day (static list or random pick) and link to Google Form feedback"
+    ],
+    "acceptance": [
+      "Data deletion removes user docs",
+      "Tips render and feedback link works"
+    ]
+  }
+  

@@ -1,0 +1,13 @@
+{
+    "task": "Configure Tailwind and base UI primitives",
+    "steps": [
+      "Configure tailwind.config and index.css",
+      "Create Card, Button, Input components with Tailwind classes",
+      "Apply components on placeholder pages"
+    ],
+    "acceptance": [
+      "Cards and buttons look consistent",
+      "No inline style duplication for basics"
+    ]
+  }
+  

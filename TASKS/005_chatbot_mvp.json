@@ -1,0 +1,15 @@
+{
+    "task": "Chatbot MVP via Firebase Function (OpenAI proxy)",
+    "steps": [
+      "Create functions/ with an HTTPS callable function `chat` (receives {intent, history, text})",
+      "Server constructs prompt with safety constraints and returns JSON {summary, suggestions, safetyNote?}",
+      "Client: /chat page shows message list, input, send; render JSON fields in bubbles",
+      "Add simple client-side intent classifier (symptom, wellness, diet, injury, unknown)"
+    ],
+    "acceptance": [
+      "Typing a prompt returns a structured JSON response",
+      "Safety note appears for red-flag content",
+      "No API key in client"
+    ]
+  }
+  

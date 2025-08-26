@@ -1,0 +1,13 @@
+{
+    "task": "Firestore security rules + Hosting config",
+    "steps": [
+      "Add firestore.rules with owner-only access on all collections",
+      "Add firebase.json and .firebaserc templates",
+      "Write README: how to init Firebase project, set env, deploy hosting"
+    ],
+    "acceptance": [
+      "Rules compile",
+      "README has clear steps for init/deploy"
+    ]
+  }
+  

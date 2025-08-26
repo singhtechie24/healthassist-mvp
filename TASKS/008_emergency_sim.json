@@ -1,0 +1,14 @@
+{
+    "task": "Emergency Simulation (Fake ETA + Checklist)",
+    "steps": [
+      "Add Start Simulation button → show fake ETA countdown",
+      "Render checklist steps (e.g., call for help, check airway)",
+      "Optional: feature flag to show a static map placeholder"
+    ],
+    "acceptance": [
+      "ETA countdown runs",
+      "Checklist visible and clear",
+      "Map optional and safe to omit"
+    ]
+  }
+  

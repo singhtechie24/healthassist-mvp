@@ -1,0 +1,13 @@
+{
+    "task": "Polish + Testing evidence",
+    "steps": [
+      "Add disclaimers to chatbot and emergency pages",
+      "Create a basic Test Cases table (md) with Expected vs Actual",
+      "Collect screenshots for each route for Chapter 4.3"
+    ],
+    "acceptance": [
+      "Screenshots saved in /docs/screens",
+      "Test table ready for dissertation"
+    ]
+  }
+  

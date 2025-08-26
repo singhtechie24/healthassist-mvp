@@ -1,0 +1,16 @@
+---
+alwaysApply: true
+---
+
+# Project Rules – HealthAssist MVP
+- Tech: Vite + React + TS, Tailwind, React Router/Query, Firebase, OpenAI via Function.
+- Data entities: users, moodLogs, reminders, chatSessions, emergencyEvents (owner-only).
+- Non-functional: fast load, safe prompts, minimal data, consent gate, anonymous login.
+- UI: simple cards, one primary action per page, clear disclaimers for non-clinical use.
+- Feature flags (optional): tips, scanner, voice input; off by default.
+# Project Rules – HealthAssist MVP
+- Tech: Vite + React + TS, Tailwind, React Router/Query, Firebase, OpenAI via Function.
+- Data entities: users, moodLogs, reminders, chatSessions, emergencyEvents (owner-only).
+- Non-functional: fast load, safe prompts, minimal data, consent gate, anonymous login.
+- UI: simple cards, one primary action per page, clear disclaimers for non-clinical use.
+- Feature flags (optional): tips, scanner, voice input; off by default.

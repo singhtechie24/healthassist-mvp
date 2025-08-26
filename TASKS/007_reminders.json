@@ -1,0 +1,13 @@
+{
+    "task": "Reminders (CRUD) + local notification simulation",
+    "steps": [
+      "Create reminders/{uid}/items/{id} with {label, timeISO, repeat?}",
+      "List reminders with edit/delete",
+      "Simulate local notification (in-app toast) when time matches"
+    ],
+    "acceptance": [
+      "Create, update, delete works",
+      "A toast/banner simulates notification on due time"
+    ]
+  }
+  
