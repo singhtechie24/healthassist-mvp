@@ -267,9 +267,21 @@ export class OpenAIRealtimeService {
     try {
       console.log('🔗 Connecting to OpenAI Realtime API via proxy...');
       
-      // Connect to our local proxy server instead of OpenAI directly
-      const proxyUrl = 'ws://localhost:3001';
-      this.ws = new WebSocket(proxyUrl);
+      // Connect to our proxy server (Vercel/Local)
+      const envUrl = (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.VITE_REALTIME_WS_URL) as string | undefined;
+      const derivedUrl = (() => {
+        if (envUrl && envUrl.trim()) return envUrl.trim();
+        if (typeof window !== 'undefined') {
+          const isHttps = window.location.protocol === 'https:';
+          const host = window.location.host;
+          // If running on Vercel frontend domain and using monorepo, assume same host has /api/realtime
+          const defaultPath = '/api/realtime';
+          const scheme = isHttps ? 'wss' : 'ws';
+          return `${scheme}://${host}${defaultPath}`;
+        }
+        return 'ws://localhost:3001';
+      })();
+      this.ws = new WebSocket(derivedUrl);
 
       // Set up WebSocket handlers
       this.setupWebSocketHandlers();
@@ -282,7 +294,7 @@ export class OpenAIRealtimeService {
         }
 
         const timeout = setTimeout(() => {
-          reject(new Error('Connection timeout - make sure proxy server is running on port 3001'));
+          reject(new Error('Connection timeout - verify your proxy function URL is correct and reachable'));
         }, 10000); // 10 second timeout
 
         this.ws.onopen = () => {
