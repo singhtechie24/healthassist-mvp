@@ -78,6 +78,13 @@ export class HealthSafeguards {
   }
 
   /**
+   * Analyze health relevance of a message
+   */
+  static async analyzeHealthRelevance(message: string): Promise<HealthSafetyResult> {
+    return this.quickHealthCheck(message);
+  }
+
+  /**
    * AI-powered health analysis for more accurate classification
    */
   static async aiHealthAnalysis(message: string): Promise<HealthSafetyResult> {
