@@ -293,9 +293,20 @@ export default function Chat() {
     }
     
     try {
-      // Use conversation context for better responses
+      // For non-logged-in users, create a temporary conversation
+      let tempConversation = currentConversation;
       if (!currentConversation || !user) {
-        throw new Error('No active conversation or user session');
+        // Create temporary conversation for anonymous users
+        tempConversation = {
+          id: `temp_${Date.now()}`,
+          title: 'Anonymous Chat',
+          summary: '',
+          recentMessages: [],
+          totalMessages: 0,
+          createdAt: new Date(),
+          lastActive: new Date(),
+          tokensUsed: 0
+        };
       }
 
              // Add user message to conversation
@@ -307,7 +318,7 @@ export default function Chat() {
        };
 
        // Update conversation with new message
-       const updatedConversation = conversationManager.addMessage(currentConversation, userMessage);
+       const updatedConversation = conversationManager.addMessage(tempConversation!, userMessage);
        
        // Auto-generate title if this is the first user message
        if (updatedConversation.totalMessages === 2 && updatedConversation.title === 'New Conversation') {
@@ -318,7 +329,7 @@ export default function Chat() {
       const adaptedProfile = AdaptiveLearning.adaptUserProfile(
         userProfile,
         updatedConversation.recentMessages,
-        user.uid
+        user?.uid || 'anonymous'
       );
       
       // Phase 1: Use Dynamic Health AI for intelligent analysis
@@ -359,12 +370,15 @@ export default function Chat() {
         );
         
         // Phase 3: Track interaction for learning
-        AdaptiveLearning.trackInteraction(
-          user.uid,
-          inputText,
-          intelligentResponse.response,
-          healthContext.domain
-        );
+        // Only track interaction for logged-in users
+        if (user) {
+          AdaptiveLearning.trackInteraction(
+            user.uid,
+            inputText,
+            intelligentResponse.response,
+            healthContext.domain
+          );
+        }
 
         // Save to Firebase
         try {
