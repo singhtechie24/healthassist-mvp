@@ -18,7 +18,7 @@ import { ContextualMemory, type MemoryContext } from '../services/contextualMemo
 import type { ReactionType } from '../services/messageReactions';
 import type { Conversation, Message } from '../types/conversation';
 import type { UserProfile } from '../services/healthAssessment';
-import { VoiceChatLimitsService, type VoiceChatUsage } from '../services/voiceChatLimits';
+
 
 export default function Chat() {
   // Conversation management
@@ -51,9 +51,7 @@ export default function Chat() {
   const [memoryContext, setMemoryContext] = useState<MemoryContext | null>(null);
   const [showMemoryIndicator, setShowMemoryIndicator] = useState(false);
   
-  // Voice chat limits state
-  const [voiceChatUsage, setVoiceChatUsage] = useState<VoiceChatUsage | null>(null);
-  const [voiceChatLoading, setVoiceChatLoading] = useState(false);
+
 
   // Listen to auth state changes
   useEffect(() => {
@@ -61,9 +59,6 @@ export default function Chat() {
       setUser(currentUser);
       if (currentUser) {
         loadUserConversations(currentUser.uid);
-        loadVoiceChatLimits(currentUser.uid);
-      } else {
-        setVoiceChatUsage(null);
       }
     });
 
@@ -97,27 +92,7 @@ export default function Chat() {
     }
   };
 
-  // Load voice chat limits for user
-  const loadVoiceChatLimits = async (userId: string) => {
-    try {
-      setVoiceChatLoading(true);
-      const usage = await VoiceChatLimitsService.canUseVoiceChat(userId);
-      setVoiceChatUsage(usage);
-    } catch (error) {
-      console.error('Failed to load voice chat limits:', error);
-      // Set default usage if loading fails
-      setVoiceChatUsage({
-        canUseVoiceChat: false,
-        reason: 'Failed to load voice chat limits',
-        remainingToday: 0,
-        totalUsed: 0,
-        dailyLimit: 10,
-        nextResetTime: 'Unknown',
-      });
-    } finally {
-      setVoiceChatLoading(false);
-    }
-  };
+
 
      // Create a new conversation
    const createNewConversation = async (userId: string, firstMessage?: string) => {
@@ -786,33 +761,7 @@ What aspect of your health or wellness can I assist you with today? 🌟`;
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Voice Chat Requires Login</h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">Sign in to access voice chat with 10 daily conversations</p>
-                  <button 
-                    onClick={() => setChatMode('text')}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    Switch to Text Chat
-                  </button>
-                </div>
-              ) : voiceChatLoading ? (
-                // Loading voice chat limits
-                <div className="text-center p-8">
-                  <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400">Loading voice chat limits...</p>
-                </div>
-              ) : voiceChatUsage && !voiceChatUsage.canUseVoiceChat ? (
-                // Voice chat limit reached
-                <div className="text-center p-8">
-                  <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Daily Voice Chat Limit Reached</h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">{voiceChatUsage.reason}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">Next reset: {voiceChatUsage.nextResetTime}</p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">Sign in to access voice chat</p>
                   <button 
                     onClick={() => setChatMode('text')}
                     className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
@@ -821,22 +770,21 @@ What aspect of your health or wellness can I assist you with today? 🌟`;
                   </button>
                 </div>
               ) : (
-                // Voice chat available
+                // Voice chat available (no limits)
                 <div className="w-full">
                   <div className="text-center mb-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
                     <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                      🎤 Voice Chat Available: {voiceChatUsage?.remainingToday || 0} conversations remaining today
+                      🎤 Voice Chat Available - No Daily Limits
                     </p>
                   </div>
                   <RealtimeVoiceChat 
                     disabled={false}
                     onError={(error) => setVoiceError(error)}
-                    onSessionStart={async () => {
-                      if (user && voiceChatUsage) {
-                        await VoiceChatLimitsService.incrementUsage(user.uid);
-                        await loadVoiceChatLimits(user.uid);
-                      }
+                    onSessionStart={() => {
+                      console.log('🎯 Voice chat session started');
                     }}
+                    remainingConversations={999}
+                    maxConversations={999}
                   />
                 </div>
               )}

@@ -6,9 +6,17 @@ interface RealtimeVoiceChatProps {
   disabled?: boolean;
   onError?: (error: string) => void;
   onSessionStart?: () => void;
+  remainingConversations?: number;
+  maxConversations?: number;
 }
 
-export default function RealtimeVoiceChat({ disabled = false, onError, onSessionStart }: RealtimeVoiceChatProps) {
+export default function RealtimeVoiceChat({ 
+  disabled = false, 
+  onError, 
+  onSessionStart,
+  remainingConversations = 10,
+  maxConversations = 10
+}: RealtimeVoiceChatProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -227,7 +235,7 @@ export default function RealtimeVoiceChat({ disabled = false, onError, onSession
         
         {/* Usage Stats */}
         <div className="text-sm text-gray-600 dark:text-gray-400">
-          💬 {usageStats.conversationsRemaining}/{usageStats.maxConversations} remaining
+                            💬 {remainingConversations}/{maxConversations} remaining
         </div>
       </div>
 

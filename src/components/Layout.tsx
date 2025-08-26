@@ -20,7 +20,7 @@ export default function Layout({ children }: LayoutProps) {
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
     FF_TIPS: false,       // Default to disabled until loaded from Firebase
     FF_SCANNER: false,
-    FF_VOICE: false,
+    FF_VOICE: true,       // Enable voice chat by default
     FF_MAP: true
   });
 
@@ -64,7 +64,7 @@ export default function Layout({ children }: LayoutProps) {
         setFeatureFlags({
           FF_TIPS: false,
           FF_SCANNER: false,
-          FF_VOICE: false,
+          FF_VOICE: true,       // Enable voice chat even for non-authenticated users
           FF_MAP: true
         });
       }
