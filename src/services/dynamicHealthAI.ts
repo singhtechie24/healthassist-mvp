@@ -187,11 +187,12 @@ Respond ONLY with the JSON, no explanation.`;
     // Smart complexity assessment - only use full pipeline when truly beneficial
     const complexityScore = this.assessComplexityNeed(userMessage, context, userProfile, conversationHistory);
     
+    // TEMPORARY FIX: Always use intelligent response for now to test OpenAI API
+    console.log(`🧠 Dynamic AI activated - complexity score: ${complexityScore}`);
+    
+    // Force intervention to test OpenAI API
     if (complexityScore < 40) {
-      return {
-        shouldIntervene: false,
-        reasoning: `Low complexity score (${complexityScore}) - standard AI recommended`
-      };
+      console.log('⚠️ Low complexity but forcing intervention for testing');
     }
 
     console.log(`🧠 Dynamic AI activated - complexity score: ${complexityScore}`);
@@ -259,8 +260,45 @@ Respond ONLY with the JSON, no explanation.`;
         );
         initialResponse = intelligentResponse.content;
       } else {
-        // Fallback to simple response
-        initialResponse = "I understand your question. Let me provide a helpful response.";
+        // FALLBACK: Generate response using OpenAI API directly
+        console.log('🔄 Fallback: Generating response via OpenAI API...');
+        try {
+          const fallbackPrompt = `You are a helpful health coach. The user asked: "${userMessage}"
+
+Please provide a helpful, health-focused response that:
+- Addresses their specific question
+- Provides actionable advice
+- Maintains a warm, supportive tone
+- Includes appropriate health disclaimers
+
+Respond naturally as a health coach:`;
+
+          const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+          if (!apiKey) {
+            throw new Error('OpenAI API key not found');
+          }
+
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{ role: 'user', content: fallbackPrompt }],
+              max_tokens: 300,
+              temperature: 0.7
+            })
+          });
+
+          const data = await response.json();
+          initialResponse = data.choices[0].message.content;
+          console.log('✅ Fallback OpenAI response generated:', initialResponse);
+        } catch (error) {
+          console.error('❌ Fallback OpenAI API failed:', error);
+          initialResponse = "I understand your question. Let me provide a helpful response.";
+        }
       }
     }
 

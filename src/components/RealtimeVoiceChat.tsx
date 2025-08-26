@@ -5,9 +5,10 @@ import type { RealtimeSession } from '../services/openaiRealtime';
 interface RealtimeVoiceChatProps {
   disabled?: boolean;
   onError?: (error: string) => void;
+  onSessionStart?: () => void;
 }
 
-export default function RealtimeVoiceChat({ disabled = false, onError }: RealtimeVoiceChatProps) {
+export default function RealtimeVoiceChat({ disabled = false, onError, onSessionStart }: RealtimeVoiceChatProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -47,6 +48,11 @@ export default function RealtimeVoiceChat({ disabled = false, onError }: Realtim
       setLastError(null); // Clear any errors when session is successfully created
       setConnectionStatus('connected'); // Ensure connection status is correct
       updateUsage();
+      
+      // Call onSessionStart callback if provided
+      if (onSessionStart) {
+        onSessionStart();
+      }
     };
 
     const handleAudioInputStarted = () => {
