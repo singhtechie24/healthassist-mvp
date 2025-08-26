@@ -76,9 +76,9 @@ export default async function handler(req: Request): Promise<Response> {
   client.addEventListener('error', closeBoth);
   server.addEventListener('error', closeBoth);
 
-  // Return upgraded response (non-standard ResponseInit.webSocket on Edge)
+  // Return upgraded response to the browser with our server-side socket
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new Response(null, { status: 101, webSocket: client } as any);
+  return new Response(null, { status: 101, webSocket: serverClient } as any);
 }
 
 
