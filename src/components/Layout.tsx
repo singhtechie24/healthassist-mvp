@@ -18,7 +18,7 @@ interface FeatureFlags {
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
-    FF_TIPS: false,       // Default to disabled until loaded from Firebase
+            FF_TIPS: true,       // Enable tips by default for better UX
     FF_SCANNER: false,
     FF_VOICE: true,       // Enable voice chat by default
     FF_MAP: true
@@ -60,11 +60,11 @@ export default function Layout({ children }: LayoutProps) {
         }
       } else {
         console.log('🔒 Layout: No user, using default feature flags');
-        // Reset to defaults when no user (Tips disabled by default)
+        // Non-authenticated users get default flags (enabled for better UX)
         setFeatureFlags({
-          FF_TIPS: false,
+          FF_TIPS: true,
           FF_SCANNER: false,
-          FF_VOICE: true,       // Enable voice chat even for non-authenticated users
+          FF_VOICE: true,
           FF_MAP: true
         });
       }
