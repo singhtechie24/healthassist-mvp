@@ -257,4 +257,32 @@ export class HealthSafeguards {
       immediateActions
     };
   }
+
+  /**
+   * Validate if a response maintains health focus
+   */
+  static async validateResponseHealthFocus(response: string, userInput: string): Promise<boolean> {
+    const lowerResponse = response.toLowerCase();
+    const lowerInput = userInput.toLowerCase();
+    
+    // Check if response contains health-related keywords
+    const hasHealthKeywords = this.HEALTH_KEYWORDS.some(keyword => 
+      lowerResponse.includes(keyword)
+    );
+    
+    // Check if response addresses the user's health input
+    const addressesUserInput = this.HEALTH_KEYWORDS.some(keyword => 
+      lowerInput.includes(keyword) && lowerResponse.includes(keyword)
+    );
+    
+    // Check if response contains medical disclaimers
+    const hasDisclaimers = lowerResponse.includes('consult') || 
+                           lowerResponse.includes('doctor') ||
+                           lowerResponse.includes('professional') ||
+                           lowerResponse.includes('medical advice') ||
+                           lowerResponse.includes('healthcare provider');
+    
+    // Response is health-focused if it has health keywords, addresses user input, or has proper disclaimers
+    return hasHealthKeywords || addressesUserInput || hasDisclaimers;
+  }
 }
