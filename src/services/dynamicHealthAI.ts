@@ -363,6 +363,41 @@ RESPOND AS THE HEALTH COACH:`;
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: adaptivePrompt }],
+          max_tokens: 300,
+          temperature: 0.7
+        })
+      });
+
+      const data = await response.json();
+      const aiResponse = data.choices[0].message.content;
+
+      return {
+        content: aiResponse,
+        reasoning: `Adaptive response generated with emotional context: ${emotionalContext.userMood}, situational: ${situationalContext.conversationStage}, strategy: ${adaptiveStrategy.interactionStyle}`
+      };
+    } catch (error) {
+      console.error('Adaptive response generation failed:', error);
+      return {
+        content: "I understand your question. Let me provide a helpful response based on your situation.",
+        reasoning: 'Fallback response due to API error'
+      };
+    }
+
+    try {
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error('OpenAI API key not found');
+      }
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: adaptivePrompt }],
           max_tokens: 450,
           temperature: 0.8 // Higher creativity for natural, adaptive responses
         })
