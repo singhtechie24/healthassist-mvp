@@ -206,6 +206,29 @@ export class HealthSafeguards {
   }
 
   /**
+   * Generate safeguard response for health-related messages
+   */
+  static generateSafeguardResponse(healthAnalysis: HealthSafetyResult): string {
+    if (healthAnalysis.requiresMedicalAttention) {
+      return `🚨 **EMERGENCY ALERT**: ${healthAnalysis.recommendations.join(' ')}`;
+    }
+    
+    if (healthAnalysis.riskLevel === 'high') {
+      return `⚠️ **High Risk**: ${healthAnalysis.recommendations.join(' ')}`;
+    }
+    
+    if (healthAnalysis.riskLevel === 'medium') {
+      return `🏥 **Health Advisory**: ${healthAnalysis.recommendations.join(' ')}`;
+    }
+    
+    if (healthAnalysis.isHealthRelated) {
+      return `💡 **Health Information**: ${healthAnalysis.recommendations.join(' ')}`;
+    }
+    
+    return '✅ No immediate health concerns detected.';
+  }
+
+  /**
    * Emergency symptom detection
    */
   static detectEmergencySymptoms(message: string): {
