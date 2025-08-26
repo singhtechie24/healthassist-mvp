@@ -226,22 +226,19 @@ export default function Chat() {
       content: msg.text
     }));
     
-    const healthAnalysis = await HealthSafeguards.analyzeHealthRelevance(
-      inputText, 
-      conversationHistory
-    );
+    const healthAnalysis = await HealthSafeguards.analyzeHealthRelevance(inputText);
     
-    const safeguardResponse = HealthSafeguards.generateSafeguardResponse(healthAnalysis, inputText);
+    const safeguardResponse = HealthSafeguards.generateSafeguardResponse(healthAnalysis);
     
-    // If query should be redirected, show redirect message instead
-    if (!safeguardResponse.shouldProceed && safeguardResponse.redirectMessage) {
-      const redirectMessage: Message = {
+    // Check if this is an emergency that needs immediate attention
+    if (healthAnalysis.requiresMedicalAttention) {
+      const emergencyMessage: Message = {
         id: Date.now().toString(),
-        text: safeguardResponse.redirectMessage,
+        text: safeguardResponse,
         sender: 'ai',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, redirectMessage]);
+      setMessages(prev => [...prev, emergencyMessage]);
       setInputText('');
       return;
     }
@@ -320,18 +317,22 @@ export default function Chat() {
       );
       
       // Phase 1: Use Dynamic Health AI for intelligent analysis
+      console.log('🔍 Starting Dynamic Health AI analysis...');
       const healthContext = await DynamicHealthAI.analyzeHealthContext(
         inputText, 
         updatedConversation.recentMessages, 
         adaptedProfile // Use adapted profile instead of original
       );
+      console.log('✅ Health context analyzed:', healthContext);
       
+      console.log('🧠 Generating intelligent response...');
       const intelligentResponse = await DynamicHealthAI.generateIntelligentResponse(
         inputText,
         healthContext,
         adaptedProfile, // Use adapted profile
         updatedConversation.recentMessages
       );
+      console.log('✅ Intelligent response generated:', intelligentResponse);
       
       // If AI recommends intervention, show intelligent response immediately
       if (intelligentResponse.shouldIntervene && intelligentResponse.response) {
@@ -391,13 +392,13 @@ export default function Chat() {
         }
         
         // PHASE 4: Add Health Context from Safeguards
-        if (safeguardResponse.healthContext) {
-          apiContext[0].content += '\n\nHEALTH FOCUS CONTEXT: ' + safeguardResponse.healthContext;
+        if (healthAnalysis.isHealthRelated) {
+          apiContext[0].content += '\n\nHEALTH FOCUS CONTEXT: This is a health-related query about ' + healthAnalysis.recommendations.join(', ');
         }
         
-        // Add modified prompt instructions if needed
-        if (safeguardResponse.modifiedPrompt) {
-          apiContext[0].content += '\n\nSPECIAL INSTRUCTIONS: ' + safeguardResponse.modifiedPrompt;
+        // Add health safety context if needed
+        if (healthAnalysis.riskLevel === 'medium' || healthAnalysis.riskLevel === 'high') {
+          apiContext[0].content += '\n\nHEALTH SAFETY: ' + safeguardResponse;
         }
         
         // PHASE 5: Add Contextual Memory

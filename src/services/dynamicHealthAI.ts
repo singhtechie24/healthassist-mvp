@@ -383,39 +383,8 @@ RESPOND AS THE HEALTH COACH:`;
       };
     }
 
-    try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OpenAI API key not found');
-      }
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: adaptivePrompt }],
-          max_tokens: 450,
-          temperature: 0.8 // Higher creativity for natural, adaptive responses
-        })
-      });
-
-      const data = await response.json();
-      return {
-        content: data.choices[0].message.content,
-        reasoning: 'Fully adaptive response generated with multi-layer context awareness'
-      };
-      
-    } catch (error) {
-      console.error('Adaptive intelligent response failed:', error);
-      return {
-        content: "I'm genuinely excited to help you! Let me understand your situation better so I can give you the most helpful guidance.",
-        reasoning: 'Fallback adaptive response due to API error'
-      };
-    }
+    // Remove duplicate API call - this was causing issues
+    // The method should return the response from the first API call above
   }
 
   /**
