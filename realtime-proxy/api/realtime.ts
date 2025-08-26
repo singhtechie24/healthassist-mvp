@@ -41,44 +41,41 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Acquire client and upstream sockets
   // On Vercel Edge, use WebSocketPair to establish client socket
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pair = new (globalThis as any).WebSocketPair();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const client = pair[0] as unknown as WebSocket;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const serverClient = pair[1] as unknown as WebSocket;
+  // @ts-expect-error WebSocketPair is available at runtime on Edge
+  const pair = new WebSocketPair();
+  const clientWS = pair[0] as WebSocket;   // returned to browser
+  const serverWS = pair[1] as WebSocket;   // stays on edge
   // Upstream socket from OpenAI
-  const server = upstreamAny.webSocket as WebSocket;
+  const upstreamWS = upstreamAny.webSocket as WebSocket;
 
   // Accept both sides
   // @ts-expect-error accept is available at runtime on Edge WebSockets
-  client.accept();
+  serverWS.accept();
   // @ts-expect-error accept is available at runtime on Edge WebSockets
-  serverClient.accept();
-  // @ts-expect-error accept is available at runtime on Edge WebSockets
-  server.accept();
+  upstreamWS.accept();
 
   // Pipe messages bi-directionally
-  client.addEventListener('message', (ev) => {
-    try { server.send((ev as MessageEvent).data as unknown as string); } catch (e) { console.warn('pipe->server error', e); }
+  serverWS.addEventListener('message', (ev) => {
+    try { upstreamWS.send((ev as MessageEvent).data as string); } catch (e) { console.warn('pipe->upstream error', e); }
   });
-  server.addEventListener('message', (ev) => {
-    try { client.send((ev as MessageEvent).data as unknown as string); } catch (e) { console.warn('pipe->client error', e); }
+  upstreamWS.addEventListener('message', (ev) => {
+    try { serverWS.send((ev as MessageEvent).data as string); } catch (e) { console.warn('pipe->edge error', e); }
   });
 
   const closeBoth = () => {
-    try { client.close(); } catch (e) { console.warn('client close err', e); }
-    try { server.close(); } catch (e) { console.warn('server close err', e); }
+    try { serverWS.close(); } catch (e) { console.warn('edge close err', e); }
+    try { upstreamWS.close(); } catch (e) { console.warn('upstream close err', e); }
   };
 
-  client.addEventListener('close', closeBoth);
-  server.addEventListener('close', closeBoth);
-  client.addEventListener('error', closeBoth);
-  server.addEventListener('error', closeBoth);
+  serverWS.addEventListener('close', closeBoth);
+  upstreamWS.addEventListener('close', closeBoth);
+  serverWS.addEventListener('error', closeBoth);
+  upstreamWS.addEventListener('error', closeBoth);
 
   // Return upgraded response to the browser with our server-side socket
+  // Return the browser side of the pair
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new Response(null, { status: 101, webSocket: serverClient } as any);
+  return new Response(null, { status: 101, webSocket: clientWS } as any);
 }
 
 
