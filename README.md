@@ -67,3 +67,9 @@ export default tseslint.config([
   },
 ])
 ```
+
+## Development
+
+## Docs
+
+See `docs/README.md` for full API, components, and types documentation.
