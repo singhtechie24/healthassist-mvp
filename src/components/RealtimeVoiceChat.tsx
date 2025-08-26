@@ -6,38 +6,42 @@ interface RealtimeVoiceChatProps {
   disabled?: boolean;
   onError?: (error: string) => void;
   onSessionStart?: () => void;
-  remainingConversations?: number;
-  maxConversations?: number;
+  userId?: string | null;
 }
 
 export default function RealtimeVoiceChat({ 
   disabled = false, 
   onError, 
   onSessionStart,
-  remainingConversations = 10,
-  maxConversations = 10
+  userId
 }: RealtimeVoiceChatProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [session, setSession] = useState<RealtimeSession | null>(null);
+  const [usageStats, setUsageStats] = useState(openaiRealtime.getUsageStats());
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [lastError, setLastError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Update session state
-  const updateSession = useCallback(() => {
+  // Update usage stats
+  const updateUsage = useCallback(() => {
+    setUsageStats(openaiRealtime.getUsageStats());
     setSession(openaiRealtime.getCurrentSession());
   }, []);
 
   // Event handlers
   useEffect(() => {
+    // Scope usage to current user for per-account limits (non-blocking)
+    openaiRealtime.setUserId(userId ?? null);
+    updateUsage();
+
     const handleConnectionOpen = () => {
       console.log('🎉 Voice chat connected');
       setIsConnected(true);
       setConnectionStatus('connected');
       setLastError(null); // Clear any lingering errors when successfully connected
-      updateSession();
+      updateUsage();
     };
 
     const handleConnectionClose = () => {
@@ -46,14 +50,14 @@ export default function RealtimeVoiceChat({
       setIsRecording(false);
       setIsPlaying(false);
       setConnectionStatus('disconnected');
-      updateSession();
+      updateUsage();
     };
 
     const handleSessionCreated = () => {
       console.log('🎯 Voice session created');
       setLastError(null); // Clear any errors when session is successfully created
       setConnectionStatus('connected'); // Ensure connection status is correct
-      updateSession();
+      updateUsage();
       
       // Call onSessionStart callback if provided
       if (onSessionStart) {
@@ -93,15 +97,10 @@ export default function RealtimeVoiceChat({
         errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       }
       
-      // Don't set error if we have an active session (session errors are handled differently)
-      if (!session) {
-        setLastError(errorMessage);
-        setConnectionStatus('error');
-        if (onError) {
-          onError(errorMessage);
-        }
-      } else {
-        console.log('⚠️ Session error (not setting UI error):', errorMessage);
+      setLastError(errorMessage);
+      setConnectionStatus('error');
+      if (onError) {
+        onError(errorMessage);
       }
     };
 
@@ -136,7 +135,7 @@ export default function RealtimeVoiceChat({
       openaiRealtime.off('audio.output.finished', handleAudioOutputFinished);
       openaiRealtime.off('error', handleError);
     };
-  }, [onError, updateSession]);
+  }, [onError, updateUsage, userId, onSessionStart]);
 
   // Timer to update current time for live duration calculation
   useEffect(() => {
@@ -156,15 +155,10 @@ export default function RealtimeVoiceChat({
     
     if (isActuallyConnected) {
       await openaiRealtime.disconnect();
-      // Reset session state after disconnect
-      setSession(null);
-      setLastError(null);
-      setConnectionStatus('disconnected');
     } else {
       try {
         setConnectionStatus('connecting');
         setLastError(null);
-        setSession(null); // Clear any old session
         await openaiRealtime.connect();
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to connect';
@@ -203,6 +197,7 @@ export default function RealtimeVoiceChat({
   const getConnectionButtonProps = () => {
     // If we have an active session, we're definitely connected regardless of connectionStatus
     const isActuallyConnected = connectionStatus === 'connected' || session;
+    const limitReached = usageStats.conversationsRemaining <= 0;
     
     if (connectionStatus === 'connecting') {
       return {
@@ -224,9 +219,9 @@ export default function RealtimeVoiceChat({
       };
     } else {
       return {
-        text: 'Start Voice Chat',
-        className: 'bg-green-500 hover:bg-green-600',
-        disabled: false
+        text: limitReached ? 'Daily Limit Reached' : 'Start Voice Chat',
+        className: limitReached ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600',
+        disabled: limitReached || false
       };
     }
   };
@@ -243,7 +238,7 @@ export default function RealtimeVoiceChat({
         
         {/* Usage Stats */}
         <div className="text-sm text-gray-600 dark:text-gray-400">
-                            💬 {remainingConversations}/{maxConversations} remaining
+          💬 {usageStats.conversationsRemaining}/{usageStats.maxConversations} remaining
         </div>
       </div>
 
@@ -269,7 +264,7 @@ export default function RealtimeVoiceChat({
       </div>
 
       {/* Error Display - only show if actually not connected or in error state */}
-      {lastError && (connectionStatus === 'error' || connectionStatus === 'disconnected') && !session && !isConnected && (
+      {lastError && (connectionStatus === 'error' || connectionStatus === 'disconnected') && !session && (
         <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="flex items-start space-x-3">
             <div className="text-2xl">⚠️</div>
@@ -363,6 +358,13 @@ export default function RealtimeVoiceChat({
           </div>
         )}
       </div>
+
+      {/* Limit reached warning */}
+      {usageStats.conversationsRemaining <= 0 && (
+        <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200 text-sm">
+          You’ve reached today’s voice limit. Try again after midnight.
+        </div>
+      )}
 
       {/* Instructions */}
       {!isConnected && (

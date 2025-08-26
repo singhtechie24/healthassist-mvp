@@ -31,9 +31,11 @@ interface RealtimeSession {
 type EventCallback = (data?: unknown) => void;
 
 export class OpenAIRealtimeService {
+  private static readonly MAX_DAILY_LIMIT = 20;
   private ws: WebSocket | null = null;
   private session: RealtimeSession | null = null;
   private eventListeners: Map<string, EventCallback[]> = new Map();
+  private currentUserId: string | null = null; // Namespace usage per user
   // Using AudioWorklet/ScriptProcessor instead of MediaRecorder for raw PCM16
   private audioStream: MediaStream | null = null;
   private isRecording: boolean = false;
@@ -52,7 +54,7 @@ export class OpenAIRealtimeService {
   private isProcessingResponse: boolean = false; // Flag to prevent double-triggering
   
   private usage: RealtimeLimits = {
-    maxDailyConversations: 5, // Align with Firebase limits for cost control
+    maxDailyConversations: OpenAIRealtimeService.MAX_DAILY_LIMIT, // Enforce 20/day hard limit
     maxConversationDurationSeconds: 300, // Max 5 minutes per conversation
     dailyUsage: [],
     dailySessionsStarted: 0,
@@ -60,17 +62,20 @@ export class OpenAIRealtimeService {
   };
 
   constructor() {
+    // Default to guest key until a userId is provided
     this.loadUsageFromStorage();
     this.initializeEventListeners();
-    
-    // Clear any existing usage data for testing
-    this.clearUsageData();
   }
 
   // Load usage data from localStorage
+  private getStorageKey(): string {
+    const suffix = this.currentUserId ? `_${this.currentUserId}` : '_guest';
+    return `openai_realtime_usage${suffix}`;
+  }
+
   private loadUsageFromStorage(): void {
     try {
-      const stored = localStorage.getItem('openai_realtime_usage');
+      const stored = localStorage.getItem(this.getStorageKey());
       if (stored) {
         const parsed = JSON.parse(stored);
         
@@ -87,6 +92,8 @@ export class OpenAIRealtimeService {
           parsed.dailySessionsStarted = parsed.dailyUsage?.length || 0;
         }
         
+        // Always enforce current app-side daily cap
+        parsed.maxDailyConversations = OpenAIRealtimeService.MAX_DAILY_LIMIT;
         this.usage = { ...this.usage, ...parsed };
       }
     } catch (error) {
@@ -97,23 +104,37 @@ export class OpenAIRealtimeService {
   // Save usage data to localStorage
   private saveUsageToStorage(): void {
     try {
-      localStorage.setItem('openai_realtime_usage', JSON.stringify(this.usage));
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(this.usage));
     } catch (error) {
       console.warn('Failed to save realtime usage data:', error);
     }
   }
 
-  // Clear usage data for testing
-  private clearUsageData(): void {
-    try {
-      localStorage.removeItem('openai_realtime_usage');
-      this.usage.dailySessionsStarted = 0;
+  // Next reset time string (midnight)
+  private getNextResetTimeString(): string {
+    const now = new Date();
+    const next = new Date(now);
+    next.setDate(now.getDate() + 1);
+    next.setHours(0, 0, 0, 0);
+    return next.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+
+  // Public: set active user for namespaced usage tracking
+  setUserId(userId: string | null): void {
+    // If user changes, load their usage namespace
+    this.currentUserId = userId;
+    this.loadUsageFromStorage();
+    // Enforce cap after loading any prior data
+    this.usage.maxDailyConversations = OpenAIRealtimeService.MAX_DAILY_LIMIT;
+    // Ensure daily reset logic applies on switch
+    const today = new Date().toDateString();
+    if (this.usage.lastResetDate !== today) {
       this.usage.dailyUsage = [];
-      this.usage.lastResetDate = new Date().toDateString();
-      console.log('🧹 Cleared voice chat usage data for testing');
-    } catch (error) {
-      console.warn('Failed to clear usage data:', error);
+      this.usage.dailySessionsStarted = 0;
+      this.usage.lastResetDate = today;
     }
+    this.saveUsageToStorage();
+    console.log(`👤 Realtime usage scoped to user: ${this.currentUserId ?? 'guest'}`);
   }
 
   // Initialize event listener maps
@@ -189,11 +210,11 @@ export class OpenAIRealtimeService {
       };
     }
 
-    // Check daily conversation limit
+    // Check daily conversation limit (hard block)
     if (this.usage.dailySessionsStarted >= this.usage.maxDailyConversations) {
       return {
         allowed: false,
-        reason: `Daily conversation limit reached (${this.usage.maxDailyConversations}/day). Try again tomorrow!`
+        reason: `Daily conversation limit reached (${this.usage.maxDailyConversations}/day). Next reset at ${this.getNextResetTimeString()}`
       };
     }
 

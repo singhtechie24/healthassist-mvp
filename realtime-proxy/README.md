@@ -50,5 +50,3 @@ For production, deploy to:
 - **Heroku** or other platforms
 
 No deployment needed for local development! -->
-
-

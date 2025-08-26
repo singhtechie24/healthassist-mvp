@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -25,8 +25,9 @@ export default function Login() {
         await signInWithEmailAndPassword(auth, email, password);
       }
       navigate('/dashboard');
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Authentication failed';
+      setError(message);
     }
     setLoading(false);
   };
@@ -39,71 +40,49 @@ export default function Login() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       navigate('/dashboard');
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Google sign-in failed';
+      setError(message);
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-3xl font-bold text-gray-900">
-          Welcome to HealthAssist
-        </h1>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Your AI-powered health companion
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          
-          {/* Quick Guest Access */}
-          <div className="mb-6">
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
-              <p className="text-sm text-blue-800">
-                💬 <strong>20 Free Chats</strong> - No account needed<br/>
-                📊 <strong>Unlimited Chat + Personal Features</strong> - With account
-              </p>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white dark:bg-gray-900 border border-emerald-200/60 dark:border-gray-700 shadow-lg shadow-emerald-500/15 overflow-hidden">
+            <img src="/Mylogo.png" alt="HealthAssist" className="w-12 h-12 object-contain" />
           </div>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Welcome to HealthAssist</h1>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Your AI-powered health companion</p>
+        </div>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
+        <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-xl border border-emerald-200/50 dark:border-gray-700/50 rounded-2xl shadow-lg shadow-emerald-500/10 p-6">
+          {/* 20 Free Chats CTA */}
+          <div className="mb-5 p-3 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/70 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 text-sm text-center">
+            💬 <strong>No Login Required - <br />20 Free Voice Chats per day</strong> <br />Sign in for Personal Features
           </div>
 
           {/* Google Sign-in */}
-          <div className="mt-6">
-            <button
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              🌟 Continue with Google
-            </button>
-          </div>
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+          >
+            🌟 <span className="font-medium">Continue with Google</span>
+          </button>
 
-          <div className="relative mt-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or use email</span>
-            </div>
+          <div className="flex items-center my-5">
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            <span className="px-3 text-xs uppercase tracking-wide text-gray-500">or</span>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
           </div>
 
           {/* Email/Password Form */}
-          <form className="mt-6 space-y-6" onSubmit={handleEmailLogin}>
+          <form className="space-y-4" onSubmit={handleEmailLogin}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
               <input
                 id="email"
                 name="email"
@@ -111,15 +90,13 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="your@email.com"
+                className="mt-1 block w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Password</label>
               <input
                 id="password"
                 name="password"
@@ -127,42 +104,43 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm text-center">
-                {error}
-              </div>
+              <div className="text-red-600 dark:text-red-400 text-sm text-center">{error}</div>
             )}
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/30 transition disabled:opacity-50"
+            >
+              {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
+            </button>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-blue-600 hover:text-blue-500"
-              >
-                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="w-full text-sm text-emerald-600 hover:text-emerald-500 mt-1"
+            >
+              {isSignUp ? 'Already have an account? Sign in' : "Don’t have an account? Sign up"}
+            </button>
           </form>
 
           {/* Disclaimer */}
-          <div className="mt-6 text-xs text-gray-500 text-center">
+          <div className="mt-5 text-xs text-gray-500 dark:text-gray-400 text-center">
             <p>⚠️ For educational purposes only</p>
             <p>Not a substitute for professional medical advice</p>
+          </div>
+
+          {/* Navigate without login */}
+          <div className="mt-4 text-center">
+            <Link to="/" className="text-sm text-emerald-600 hover:text-emerald-500">
+              Home
+            </Link>
           </div>
         </div>
       </div>
